@@ -25,11 +25,8 @@
     <div class="container-fluid mt-3">
         <div class="row my-3">
             <div class="col-6">
-                <label for="upload" class="btn btn-primary btn-block">Nueva Imagen</label>
-                <input type="file" id="upload" class="d-none">
             </div>
             <div class="col-6">
-                <button id="btn-crear" class="btn btn-success btn-block">Crear plantilla</button>
             </div>
         </div>
         <div class="row">
@@ -55,7 +52,7 @@
                                         <label for="nombre-publicidad">Nombre de publicidad</label>
                                         <input type="text" class="form-control mb-4" id='nombre-publicidad' placeholder='Ingresa el nombre de tu publicidad'>
                                         <!-- Orientacion -->
-                                        <div class="text-center">
+                                        <div class="text-center my-4">
                                             <h5>Orientacion</h5>
                                             <button id='orientacion-h' class="mx-4 btn btn-lg btn-default">
                                                 <i class="fas fa-arrows-alt-h"></i>
@@ -64,6 +61,10 @@
                                                 <i class="fas fa-arrows-alt-v"></i>
                                             </button>
                                         </div>
+
+                                        <label for="upload" class="btn btn-primary btn-block">Nueva Imagen</label>
+                                        <input type="file" id="upload" class="d-none">
+
                                     </div>
                                 </div>
                             </div>
@@ -83,25 +84,70 @@
                                         <label for="color_texto">Color del texto</label>
                                         <input type="color" id='color_texto' class="form-control">
 
+                                        <div id="controles_para_editar" class="my-3 text-center d-none">
+
+
+                                            <h5 class='mt-4'>Tamaño de letra</h5>
+                                            <button id='sizeDown' class="mx-4 btn btn-lg btn-default">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                            <button id='sizeUp' class="mx-4 btn btn-lg btn-default">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+
+
+                                            <h5 class='mt-4'>Orientación (Izquierda a derecha)</h5>
+                                            <button id='moveLeft' class="mx-4 btn btn-lg btn-default">
+                                                <i class="fas fa-arrow-alt-circle-left"></i>
+                                            </button>
+                                            <button id='moveRight' class="mx-4 btn btn-lg btn-default">
+                                                <i class="fas fa-arrow-alt-circle-right"></i>
+                                            </button>
+
+
+                                            <h5 class='mt-4'>Orientación (Arriba a Abajo)</h5>
+                                            <button id='moveUp' class="mx-4 btn btn-lg btn-default">
+                                                <i class="fas fa-arrow-alt-circle-up"></i>
+                                            </button>
+                                            <button id='moveDown' class="mx-4 btn btn-lg btn-default">
+                                                <i class="fas fa-arrow-alt-circle-down"></i>
+                                            </button>
+
+
+                                        </div>
+
                                         <button class="btn btn-info my-4" id='btn_texto'>Agregar a la imagen</button>
                                     </div>
                                 </div>
                             </div>
                             <div class="card">
                                 <div class="card-header" id="headingThree">
-                                <h5 class="mb-0">
-                                    <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                                    Collapsible Group Item #3
-                                    </button>
-                                </h5>
+                                    <h5 class="mb-0">
+                                        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                        Gestion de texto de imagen
+                                        </button>
+                                    </h5>
                                 </div>
                                 <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
-                                <div class="card-body">
-                                    Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
-                                </div>
+                                    <div class="card-body">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">Texto ingresado</th>
+                                                    <th scope="col">Acción</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id='tabla_textos'>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+
+                        <button id="btn-crear" class="btn btn-success btn-block my-4">Crear plantilla</button>
+
                     </div>
                 </div>
             </div>
@@ -138,8 +184,15 @@
     <script src="../libs/js/html2canvas.min.js"></script>
     <script>
 
+        let editando = false
+        let tsid_editando =  undefined
         let orientacion = 'horizontal'
         let textos_de_imagen = []
+        
+        var interval_;
+
+
+        
 
         let config = {
             orientacion
@@ -180,7 +233,95 @@
                 console.log(canvas.classList.add("newClass"))
             });
         }
-        //5570587171
+        
+        function modificarTabla(){
+            let html = ''
+            textos_de_imagen.forEach(registro => {
+                html += `
+                <tr>
+                    <td>
+                        ${registro.texto}
+                    </td>
+                    <td>
+                        <button class='btn btn-success btn_mod' data-id='${registro.tsid}'>
+                            <i class="fas fa-edit" aria-hidden="true"></i>
+                        </button>
+                        <button class='btn btn-danger btn_del' data-id='${registro.tsid}'>
+                            <i class="fas fa-trash" aria-hidden="true"></i>
+                        </button>
+                    </td>
+                </tr>
+                `
+            });
+
+            $('#tabla_textos').html(html)
+        }
+
+        function buscarRegistro(id){
+            for (let index = 0; index < textos_de_imagen.length; index++) {
+                
+                if (textos_de_imagen[index].tsid === id) {
+                    return textos_de_imagen[index]
+                }
+                
+            }
+        }
+
+        function cambiarFormulario(editando){
+            /* 
+                1.- cambia el color y texto del boton de acción
+                2.- cambia el valor de la caja de texto y caja de color
+                3.- muestra/oculta el panel de edición
+            */
+            if (editando) {
+                $('#btn_texto').text('Terminar edición')
+                $('#btn_texto').removeClass('btn-info')
+                $('#btn_texto').addClass('btn-success')
+
+                $('#texto_imagen').val(tsid_editando.texto)
+                $('#color_texto').val(tsid_editando.color)
+
+                $('#controles_para_editar').removeClass('d-none')
+
+                $('#collapseTwo').collapse('show')
+            }else{
+                $('#btn_texto').text('Agregar a la imagen')
+                $('#btn_texto').removeClass('btn-success')
+                $('#btn_texto').addClass('btn-info')
+
+                $('#texto_imagen').val('')
+                $('#color_texto').val('')
+
+                $('#controles_para_editar').addClass('d-none')
+
+                $('#collapseThree').collapse('show')
+            }
+        }
+
+        function fontResize(){
+            $(`#texto_${tsid_editando.tsid}`).css('font-size', `${tsid_editando.fontSize}px`)
+        }
+
+        function move(coordenada, signo){
+
+            // console.log(coordenada, signo)
+            if (coordenada === 'left') {
+                if (signo === '-') {
+                    tsid_editando.left = tsid_editando.left - 5
+                }else{
+                    tsid_editando.left = tsid_editando.left + 5
+                }
+                $(`#texto_${tsid_editando.tsid}`).css('left', `${tsid_editando.left}px`)
+            }else{
+                if (signo === '-') {
+                    tsid_editando.top = tsid_editando.top - 5
+                }else{
+                    tsid_editando.top = tsid_editando.top + 5
+                }
+                $(`#texto_${tsid_editando.tsid}`).css('top', `${tsid_editando.top}px`)
+            }
+        }
+
 
         $('#upload').change(function(){
             var input = this;
@@ -211,6 +352,7 @@
             crearCaptura()
         })
 
+        // orientacion de la mesa de trabajo
         $('#orientacion-h').click(function(){
             config.orientacion = 'horizontal'
             formatearDocumento(config)
@@ -222,37 +364,151 @@
             console.log(config);
         })
 
+        // Agregar nuevo texto
         $('#btn_texto').click(function(){
-            let html = ''
-            let texto = $('#texto_imagen').val()
-            let color = $('#color_texto').val()
-            let fontSize = '20px'
-            let top = 0
-            let left = 0
+            if (!editando) {
+                
+                let html = ''
+                let tsid = Date.now()
+                let texto = $('#texto_imagen').val()
+                let color = $('#color_texto').val()
+                let fontSize = 20
+                let top = 0
+                let left = 0
 
-            let styles = `
-                display: inline-block;
-                position: absolute;
-                top:${top};
-                left:${left};
-                font-size:${fontSize};
-                color:${color};
-            `
+                let styles = `
+                    display: inline-block;
+                    position: absolute;
+                    top:${top};
+                    left:${left};
+                    font-size:${fontSize}px;
+                    color:${color};
+                `
 
-            let nuevo_texto = {texto,color,fontSize,top,left}
+                let nuevo_texto = {tsid,texto,color,fontSize,top,left}
 
-            html = `
-            <p id='texto_${Date.now()}' style='${styles}'>
-                ${texto}
-            </p>
-            `
+                html = `
+                <p id='texto_${Date.now()}' style='${styles}'>
+                    ${texto}
+                </p>
+                `
 
-            $('#capture').append(html)
-            textos_de_imagen.push(nuevo_texto)
+                $('#capture').append(html)
+                textos_de_imagen.push(nuevo_texto)
+                modificarTabla()
 
+                tsid_editando = nuevo_texto
+                editando = true
+                cambiarFormulario(editando)
+
+            }else{
+                editando = false
+                cambiarFormulario(editando)
+            }
         })
 
+        // Cambiar de tamaño de letra
+            $('#sizeDown').click(function(){
+                tsid_editando.fontSize = tsid_editando.fontSize - 5
+                fontResize()
+            })
+            $('#sizeUp').click(function(){
+                tsid_editando.fontSize = tsid_editando.fontSize + 5
+                fontResize()
+            })
+        // Cambiar de tamaño de letra
+
+        // Mover de izquierda a derecha
+            $('#moveLeft').mousedown(function(){
+                interval_ = setInterval(function(){ 
+                    move('left', '-')
+                }, 50);
+            })
+            $('#moveLeft').mouseup(function(){
+                clearInterval(interval_);
+            });
+            $('#moveLeft').click(function(){
+                move('left', '-')
+            })
+
+            $('#moveRight').mousedown(function(){
+                interval_ = setInterval(function(){ 
+                    move('left', '+')
+                }, 50);
+            })
+            $('#moveRight').mouseup(function(){
+                clearInterval(interval_);
+            });
+            $('#moveRight').click(function(){
+                move('left', '+')
+            })
+        // Mover de izquierda a derecha
+
+        // Mover de arriba a abajo
+            $('#moveDown').mousedown(function(){
+                interval_ = setInterval(function(){ 
+                    move('top', '+')
+                }, 50);
+            })
+            $('#moveDown').mouseup(function(){
+                clearInterval(interval_);
+            });
+            $('#moveDown').click(function(){
+                move('top', '+')
+            })
+            $('#moveUp').mousedown(function(){
+                interval_ = setInterval(function(){ 
+                    move('top', '-')
+                }, 50);
+            })
+            $('#moveUp').mouseup(function(){
+                clearInterval(interval_);
+            });
+            $('#moveUp').click(function(){
+                move('top', '-')
+            })
+        // Mover de arriba a abajo
+
+        // Cuando cambie el texto
+            $('#texto_imagen').on('propertychange input', function (e) {
+                var valueChanged = false;
+
+                if (e.type=='propertychange') {
+                    valueChanged = e.originalEvent.propertyName=='value';
+                } else {
+                    valueChanged = true;
+                }
+                if (valueChanged) {
+                    if (editando) {
+                        $(`#texto_${tsid_editando.tsid}`).text(e.target.value)
+                    }
+                }
+            });
+        // Cuando cambie el texto
+
+        // Cuando cambie el color
+            $('#color_texto').change(function(e){
+                if (editando) {
+                    $(`#texto_${tsid_editando.tsid}`).text(e.target.value)
+                }
+            })
+        // Cuando cambie el color
+
         formatearDocumento(config)
+    </script>
+
+    <script>
+
+        // Funciona solamente con elementos dinamicos (que ya se crearon en el DOM)
+
+        // Para modificar algun texto ya creado
+        $(document.body).on('click', '.btn_mod' ,function(){
+
+            tsid_editando = buscarRegistro( $(this).data('id') )
+            editando = true
+            cambiarFormulario(editando)
+
+        })
     </script>
 </body>
 </html>
