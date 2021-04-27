@@ -6,6 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HTML a Canvas</title>
     <?php include('../components/links_bootstrap.php')?>
+
+    <link 
+        rel="stylesheet" 
+        href="../libs/css/jquery.dataTables.min.css" 
+    >
+
 </head>
 <body>
     
@@ -143,10 +149,36 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="card">
+                                <div class="card-header" id="headingFour">
+                                    <h5 class="mb-0">
+                                        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                                        Agregar usuarios a esta plantilla
+                                        </button>
+                                    </h5>
+                                </div>
+                                <div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#accordion">
+                                    <div class="card-body">
+                                        <table id="tabla_usuarios_agregados" class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>id</th>
+                                                    <th>Nombre</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
 
-                        <button id="btn-crear" class="btn btn-success btn-block my-4">Crear plantilla</button>
+                        <button id="btn-crear" class="btn btn-info btn-block mt-4">Crear plantilla</button>
+                        <button id="btn-download" class="btn btn-info btn-block">Descargar imagen</button>
+                        <button id="btn-save" class="btn btn-success btn-block">Guardar cambios</button>
 
                     </div>
                 </div>
@@ -180,6 +212,9 @@
 
     <?php include('../components/scripts_bootstrap.php')?>
 
+    <script 
+    src="../libs/js/jquery.dataTables.min.js" ></script>
+
     <script src="https://kit.fontawesome.com/1a78bd2af6.js" crossorigin="anonymous"></script>
     <script src="../libs/js/html2canvas.min.js"></script>
     <script>
@@ -189,8 +224,16 @@
         let orientacion = 'horizontal'
         let textos_de_imagen = []
         
+        // Usado para las funciones de mantener presionado
         var interval_;
 
+
+        // variable de ejemplo
+        let mis_usuarios = [
+            {id: 1, nombre: 'Jorge Aguirre'},
+            {id: 2, nombre: 'Adad Ulises'},
+            {id: 3, nombre: 'Jonas Castillo'}
+        ]
 
         
 
@@ -230,7 +273,20 @@
                 // document.body.appendChild(canvas)
                 // canvas.addClass('img-fluid');
                 $("#canvas_destino").html(canvas);
-                console.log(canvas.classList.add("newClass"))
+                // console.log(canvas.classList.add("newClass"))
+            });
+        }
+
+        function saveAs() {
+            html2canvas(document.querySelector("#capture"),{useCORS: true,}).then(canvas => {
+                
+                var link = document.createElement("a");
+                document.body.appendChild(link);
+                link.download = "download.png";
+                link.href = canvas.toDataURL("image/png");
+                link.target = '_blank';
+                link.click();
+
             });
         }
         
@@ -407,6 +463,9 @@
             }
         })
 
+        // descarga deimagen
+        $('#btn-download').click(function(){saveAs()})
+
         // Cambiar de tamaño de letra
             $('#sizeDown').click(function(){
                 tsid_editando.fontSize = tsid_editando.fontSize - 5
@@ -489,12 +548,53 @@
         // Cuando cambie el color
             $('#color_texto').change(function(e){
                 if (editando) {
-                    $(`#texto_${tsid_editando.tsid}`).text(e.target.value)
+                    $(`#texto_${tsid_editando.tsid}`).css('color', e.target.value)
                 }
             })
         // Cuando cambie el color
 
+
+        // Guardar cambios
+        $('#btn-save').click(function(){
+
+            let nombre = $('#nombre-publicidad').val().trim() != '' ? $('#nombre-publicidad').val().trim() : null
+            let cant_text = textos_de_imagen.length != 0 ? textos_de_imagen.length : 0
+
+            // console.log(nombre, cant_text)
+
+            if(nombre === null || cant_text === 0){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Hey...!',
+                    text: 'Revisa bien los datos de tu proyecto!',
+                    footer: 'Puede que no hayas puesto un nombre a tu proyecto o no hayas agregado nada de texto a la imagen.'
+                })
+            }else{
+
+                proyecto = {
+                    nombre, orientacion, textos_de_imagen
+                }
+                console.log(proyecto)
+
+            }
+
+        })
+
         formatearDocumento(config)
+
+        $('#tabla_usuarios_agregados').DataTable({
+            data:mis_usuarios,
+            columns:[
+                {data: 'id'},
+                {data: 'nombre'},
+                {
+                    data: 'id',
+                    render: function ( data, type, row ) {
+                        return `<button class='btn btn-info'>Agregar a esta plantilla</button>`
+                    }
+                }
+            ]
+        });
     </script>
 
     <script>
